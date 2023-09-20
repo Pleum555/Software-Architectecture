@@ -1,0 +1,62 @@
+// main_test.go
+package main
+
+import (
+	"bytes"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
+
+func TestRegisterHandler(t *testing.T) {
+	// Create a request body with JSON data for registration
+	requestBody := []byte(`{"username": "testuser", "password": "testpassword"}`)
+	req, err := http.NewRequest("POST", "/register", bytes.NewBuffer(requestBody))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a ResponseRecorder to record the response
+	rr := httptest.NewRecorder()
+
+	// Call the registerHandler function
+	registerHandler(rr, req)
+
+	// Check the response status code
+	if status := rr.Code; status != http.StatusCreated {
+		t.Errorf("Expected status code %d, but got %d", http.StatusCreated, status)
+	}
+
+	// Check the response body
+	expectedBody := "User registered successfully"
+	if rr.Body.String() != expectedBody {
+		t.Errorf("Expected response body %s, but got %s", expectedBody, rr.Body.String())
+	}
+}
+
+func TestLoginHandler(t *testing.T) {
+	// Create a request body with JSON data for login
+	requestBody := []byte(`{"username": "user1", "password": "password1"}`)
+	req, err := http.NewRequest("POST", "/login", bytes.NewBuffer(requestBody))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a ResponseRecorder to record the response
+	rr := httptest.NewRecorder()
+
+	// Call the loginHandler function
+	loginHandler(rr, req)
+
+	// Check the response status code
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("Expected status code %d, but got %d", http.StatusOK, status)
+	}
+
+	// You can check the response body or JWT token as needed for your application
+	// For example, if you expect a JWT token in the response:
+	// token := rr.Body.String()
+	// Perform assertions on the token
+}
+
+// You can write similar tests for other handlers and functions
