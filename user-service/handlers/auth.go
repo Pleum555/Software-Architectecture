@@ -8,6 +8,7 @@ import (
 
 	"github.com/Pleum555/User-service/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -26,16 +27,41 @@ func VerifyPassword(password, hashedPassword string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
 
+// Function to get a user by username from the database
+func getUserByUsername(username string) *models.User {
+	var user models.User
+	filter := bson.M{"username": username}
+	err := userCollection.FindOne(context.Background(), filter).Decode(&user)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil // User not found
+		}
+		fmt.Println("Error querying database:", err)
+		return nil // Handle the error as needed
+	}
+	return &user
+}
+
 // Register a new user
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	fmt.Print(user)
 	_ = json.NewDecoder(r.Body).Decode(&user)
 
+	// Check if the username is already taken
+	existingUser := getUserByUsername(user.Username)
+	if existingUser != nil {
+		w.WriteHeader(http.StatusConflict) // HTTP 409 Conflict
+		fmt.Fprintf(w, "Username already exists")
+		return
+	}
+
 	// Generate a salted hash of the password
 	hashedPassword, err := HashPassword(user.Password)
 	if err != nil {
 		fmt.Println("Error hashing password:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error hashing password")
 		return
 	}
 	user.Password = hashedPassword
