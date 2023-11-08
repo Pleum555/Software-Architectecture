@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/Pleum555/User-service/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -76,6 +78,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	// You can now access the user data from the request body
 	fmt.Printf("Received user data: %+v\n", user)
 
+	sendTokenResponse(user, http.StatusOK, w)
+
 	// Handle user registration logic here
 	// Insert the user into the database or perform any other necessary actions
 
@@ -114,4 +118,128 @@ func Login(w http.ResponseWriter, r *http.Request) {
 // Logout logs out the user and invalidates their session or token
 func Logout(w http.ResponseWriter, r *http.Request) {
 
+}
+
+type RegisterRequest struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Tel      string `json:"tel"`
+	Password string `json:"password"`
+	Role     string `json:"role"`
+}
+
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	Success bool   `json:"success"`
+	Msg     string `json:"msg"`
+	Token   string `json:"token"`
+	// You can add other fields as needed
+}
+
+type RegisterResponse struct {
+	Success bool   `json:"success"`
+	Token   string `json:"token,omitempty"` // Include the 'token' field here
+	Msg     string `json:"msg,omitempty"`   // Include the 'msg' field if needed
+	// You can add other fields as needed
+}
+
+func sendTokenResponse(user models.User, statusCode int, w http.ResponseWriter) {
+	// Create token
+	token, err := user.GenerateJWT()
+	if err != nil {
+		http.Error(w, "Token generation failed", http.StatusInternalServerError)
+		return
+	}
+
+	options := &http.Cookie{
+		Name:     "token",
+		Value:    token,
+		Expires:  time.Now().Add(time.Hour * 24 * 30), // 30 days
+		HttpOnly: true,
+	}
+
+	if os.Getenv("NODE_ENV") == "production" {
+		options.Secure = true
+	}
+
+	http.SetCookie(w, options)
+
+	response := RegisterResponse{Success: true, Token: token}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// Register user
+func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	var user models.User
+	fmt.Print(user)
+	_ = json.NewDecoder(r.Body).Decode(&user)
+
+	// var request RegisterRequest
+	// if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	// 	http.Error(w, "Invalid request data", http.StatusBadRequest)
+	// 	return
+	// }
+
+	// Create user (you'll need to implement this function)
+	// user, err := models.User(request.Name, request.Email, request.Tel, request.Password, request.Role)
+	// if err != nil {
+	// 	http.Error(w, "User creation failed", http.StatusBadRequest)
+	// 	return
+	// }
+
+	sendTokenResponse(user, http.StatusOK, w)
+}
+
+// Login user
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	var request LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request data", http.StatusBadRequest)
+		return
+	}
+
+	// user, err := models.ValidateUser(request.Email, request.Password)
+	// if err != nil {
+	// 	response := LoginResponse{Success: false, Msg: "Invalid credentials"}
+	// 	w.Header().Set("Content-Type", "application/json")
+	// 	json.NewEncoder(w).Encode(response)
+	// 	return
+	// }
+
+	// sendTokenResponse(user, http.StatusOK, w)
+}
+
+// Get current Logged in user
+func GetMeHandler(w http.ResponseWriter, r *http.Request) {
+	// Implement code to get the user from the request context
+	// You can access the authenticated user's data from the context
+	// and return it as a response
+	// Example:
+	// user := r.Context().Value("user").(models.User)
+
+	// Create and send the response
+	// response := models.User{...} // Create a user response as needed
+	// w.Header().Set("Content-Type", "application/json")
+	// json.NewEncoder(w).Encode(response)
+}
+
+// Log user out / clear cookie
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	options := &http.Cookie{
+		Name:     "token",
+		Value:    "none",
+		Expires:  time.Now().Add(10 * time.Second),
+		HttpOnly: true,
+	}
+
+	http.SetCookie(w, options)
+
+	response := RegisterResponse{Success: true}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
