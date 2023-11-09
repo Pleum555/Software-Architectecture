@@ -21,10 +21,19 @@ func UpdateUserDetail(w http.ResponseWriter, r *http.Request) {
 	user, _ := userValue.(*CustomClaims)
 
 	checkUser := getUserByUsername(user.Username)
+	filter := bson.M{"username": checkUser.Username}
 
-	if updateUser.Username != "" {
-		checkUser.Username = updateUser.Username
-	}
+	// if updateUser.Username != "" {
+	// 	// Check if the username is already taken
+	// 	existingUser := getUserByUsername(updateUser.Username)
+	// 	fmt.Fprintln(w, existingUser)
+	// 	if existingUser != nil {
+	// 		// w.WriteHeader(http.StatusConflict) // HTTP 409 Conflict
+	// 		fmt.Fprintf(w, "Username already exists %s", updateUser.Username)
+	// 		return
+	// 	}
+	// 	checkUser.Username = updateUser.Username
+	// }
 	if updateUser.Name != "" {
 		checkUser.Name = updateUser.Name
 	}
@@ -56,18 +65,18 @@ func UpdateUserDetail(w http.ResponseWriter, r *http.Request) {
 	// You can use the `FindOneAndUpdate` method to update the user's details
 	// The following code updates the user document with the provided username
 	// and sets the new user details from `updateUser`
-	filter := bson.M{"username": checkUser.Username}
 	update := bson.M{"$set": checkUser}
 	err := userCollection.FindOneAndUpdate(context.Background(), filter, update).Decode(&checkUser)
 	if err != nil {
-		fmt.Println("Error updating database:", err)
+		fmt.Fprintln(w, "Error updating database:", err)
 		// Handle the error as needed
 		// You might want to return an error response to the client here
 		return
 	}
 
-	userJSON, _ := json.Marshal(checkUser)
-	fmt.Fprintf(w, "%s", userJSON)
+	// userJSON, _ := json.Marshal(checkUser)
+	// fmt.Fprintf(w, "%s", userJSON)
+	fmt.Fprintf(w, "User updated successfully")
 }
 
 func VerifyUserDetail(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +120,7 @@ func GetUserDetail(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func GetCurrentUserLocation(w http.ResponseWriter, r *http.Request) {
+func MessageToPlaces(w http.ResponseWriter, r *http.Request) {
 	// Extract the username from the request or wherever you get it
 	userValue := context2.Get(r, "user")
 	user, _ := userValue.(*CustomClaims)
@@ -119,16 +128,17 @@ func GetCurrentUserLocation(w http.ResponseWriter, r *http.Request) {
 	// fmt.Println("Password:", user.Password)
 	username := user.Username
 
-	var requestData models.Location
+	var requestData models.Place
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&requestData); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	location := requestData.Location
+	place := requestData.Place
 
 	// Create a connection to the RabbitMQ server
+	// var rabbitMQURL = "amqp://guest:guest@localhost:5672/"
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/") // Replace with your RabbitMQ server connection details
 	if err != nil {
 		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
@@ -143,7 +153,7 @@ func GetCurrentUserLocation(w http.ResponseWriter, r *http.Request) {
 	defer ch.Close()
 
 	// Declare a queue
-	queueName := location // Replace with your queue name
+	queueName := place // Replace with your queue name
 	_, err = ch.QueueDeclare(
 		queueName,
 		true,  // durable
@@ -174,7 +184,7 @@ func GetCurrentUserLocation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Send a response to the client
-	fmt.Fprintf(w, "Username sent to RabbitMQ queue: %s", location)
+	fmt.Fprintf(w, "%s sent to RabbitMQ queue: %s", username, place)
 	return
 }
 

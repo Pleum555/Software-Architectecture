@@ -23,17 +23,13 @@ const (
 )
 
 type User struct {
-	ID                  string     `json:"_id,omitempty"`
-	Username            string     `json:"username"`
-	Name                string     `json:"name"`
-	Surname             string     `json:"surname"`
-	Tel                 string     `json:"tel"`
-	Status              UserStatus `json:"status" default:"AVAILABLE"`
-	Role                string     `json:"role"`
-	Password            string     `json:"password,omitempty"`
-	ResetPasswordToken  string     `json:"resetPasswordToken,omitempty"`
-	ResetPasswordExpire time.Time  `json:"resetPasswordExpire,omitempty"`
-	CreatedAt           time.Time  `json:"createdAt,omitempty"`
+	Username string     `json:"username"`
+	Name     string     `json:"name"`
+	Surname  string     `json:"surname"`
+	Tel      string     `json:"tel"`
+	Status   UserStatus `json:"status" default:"AVAILABLE"`
+	Role     string     `json:"role"`
+	Password string     `json:"password,omitempty"`
 }
 
 // EncryptPassword encrypts the user's password using bcrypt
@@ -49,7 +45,7 @@ func (u *User) EncryptPassword() error {
 // GenerateJWT generates a JSON Web Token for the user
 func (u *User) GenerateJWT() (string, error) {
 	claims := jwt.MapClaims{
-		"id":  u.ID,
+		"id":  u.Username,
 		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(), // 30 days
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

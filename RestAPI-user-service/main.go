@@ -25,13 +25,14 @@ func main() {
 	r := mux.NewRouter()
 
 	// Register and login/logout routes
-	r.HandleFunc("/register", handlers.Register).Methods("POST")
-	r.HandleFunc("/login", handlers.Login).Methods("POST")
-	r.HandleFunc("/logout", handlers.Logout).Methods("GET")
+	r.HandleFunc("/register", handlers.RegisterHandler).Methods("POST")
+	r.HandleFunc("/login", handlers.LoginHandler).Methods("POST")
+	r.HandleFunc("/logout", handlers.LogoutHandler).Methods("GET")
 
 	// Protect the /getcurrentlocation route with JWT authentication
 	r.Handle("/verifyuserdetail", handlers.AuthenticateJWT(http.HandlerFunc(handlers.VerifyUserDetail))).Methods("GET")
 	r.Handle("/getuserdetail", handlers.AuthenticateJWT(http.HandlerFunc(handlers.GetUserDetail))).Methods("GET")
+	r.Handle("/messagetoplaces", handlers.AuthenticateJWT(http.HandlerFunc(handlers.MessageToPlaces))).Methods("GET")
 
 	// Add the new route and handler for updating user details
 	r.Handle("/updateuserdetail", handlers.AuthenticateJWT(http.HandlerFunc(handlers.UpdateUserDetail))).Methods("PUT")
