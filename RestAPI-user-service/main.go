@@ -9,6 +9,7 @@ import (
 	"github.com/Pleum555/User-service/handlers"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -19,9 +20,10 @@ func main() {
 	// Load environment variables
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "5000"
+		port = "8080"
 	}
 	handlers.InitMongoDB()
+
 	r := mux.NewRouter()
 
 	// Register and login/logout routes
@@ -37,8 +39,20 @@ func main() {
 	// Add the new route and handler for updating user details
 	r.Handle("/updateuserdetail", handlers.AuthenticateJWT(http.HandlerFunc(handlers.UpdateUserDetail))).Methods("PUT")
 
-	http.Handle("/", r)
+	// Create a new CORS middleware handler
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"}, // Change this to the specific origins you want to allow
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
+		Debug:            true, // Set to true to enable debugging logs
+	})
 
-	fmt.Println("Server is running on port 5000")
-	http.ListenAndServe(":5000", nil)
+	// Use the CORS middleware with your router
+	handler := c.Handler(r)
+
+	http.Handle("/", handler)
+
+	fmt.Printf("Server is running on port %s\n", port)
+	http.ListenAndServe(":"+port, nil)
 }

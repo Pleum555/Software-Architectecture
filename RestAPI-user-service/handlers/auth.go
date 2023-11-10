@@ -143,10 +143,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenString, _ := GenerateJWT(foundUser)
+	// tokenString, _ := GenerateJWT(foundUser)
 
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, tokenString)
+	// fmt.Fprintf(w, tokenString)
+	sendTokenResponse(foundUser, http.StatusOK, w)
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
