@@ -139,7 +139,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	err1 := VerifyPassword(request.Password, foundUser.Password)
 	if err1 != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Println("Password does not match the hash:", err)
+		// fmt.Println("Password does not match the hash:", err)
+		fmt.Fprintf(w, "Password is not correct")
 		return
 	}
 
