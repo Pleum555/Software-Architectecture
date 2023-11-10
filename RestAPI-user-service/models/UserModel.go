@@ -32,15 +32,27 @@ type User struct {
 	Password string     `json:"password,omitempty"`
 }
 
-func NewUser(username, password, name, surname, role, tel string) *User {
-	return &User{
-		Username: username,
-		Name:     name,
-		Surname:  surname,
-		Tel:      tel,
-		Status:   AvailableUserStatus, // Set the default status here
-		Role:     role,
-		Password: password,
+func NewUser(username, password, name, surname, role, tel string, status UserStatus) *User {
+	if status == "" {
+		return &User{
+			Username: username,
+			Name:     name,
+			Surname:  surname,
+			Tel:      tel,
+			Status:   AvailableUserStatus, // Set the default status here
+			Role:     role,
+			Password: password,
+		}
+	} else {
+		return &User{
+			Username: username,
+			Name:     name,
+			Surname:  surname,
+			Tel:      tel,
+			Status:   status, // Set the default status here
+			Role:     role,
+			Password: password,
+		}
 	}
 }
 

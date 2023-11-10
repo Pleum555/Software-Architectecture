@@ -92,7 +92,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Use the NewUser function to create a new user with default values
-	newUser := models.NewUser(user.Username, user.Password, user.Name, user.Surname, user.Role, user.Tel)
+	newUser := models.NewUser(user.Username, user.Password, user.Name, user.Surname, user.Role, user.Tel, user.Status)
 
 	// Generate a salted hash of the password
 	hashedPassword, err := HashPassword(newUser.Password)
