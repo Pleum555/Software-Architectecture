@@ -91,17 +91,20 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Use the NewUser function to create a new user with default values
+	newUser := models.NewUser(user.Username, user.Password, user.Name, user.Surname, user.Role, user.Tel)
+
 	// Generate a salted hash of the password
-	hashedPassword, err := HashPassword(user.Password)
+	hashedPassword, err := HashPassword(newUser.Password)
 	if err != nil {
 		fmt.Println("Error hashing password:", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error hashing password")
 		return
 	}
-	user.Password = hashedPassword
+	newUser.Password = hashedPassword
 
-	_, err1 := userCollection.InsertOne(context.Background(), &user)
+	_, err1 := userCollection.InsertOne(context.Background(), newUser)
 	if err1 != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error registering user")
@@ -109,9 +112,10 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// You can now access the user data from the request body
-	fmt.Printf("Received user data: %+v\n", user)
+	fmt.Printf("Received user data: %+v\n", newUser)
 	w.WriteHeader(http.StatusCreated)
-	sendTokenResponse(user, http.StatusOK, w)
+	fmt.Fprintf(w, "User registered successfully")
+	// sendTokenResponse(user, http.StatusOK, w)
 }
 
 // Login user
@@ -144,11 +148,14 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// tokenString, _ := GenerateJWT(foundUser)
+	tokenString, _ := GenerateJWT(foundUser)
 
 	w.WriteHeader(http.StatusOK)
+	response := RegisterResponse{Success: true, Token: tokenString}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 	// fmt.Fprintf(w, tokenString)
-	sendTokenResponse(foundUser, http.StatusOK, w)
+	// sendTokenResponse(foundUser, http.StatusOK, w)
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {

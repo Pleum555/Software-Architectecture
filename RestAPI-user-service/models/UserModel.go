@@ -32,6 +32,18 @@ type User struct {
 	Password string     `json:"password,omitempty"`
 }
 
+func NewUser(username, password, name, surname, role, tel string) *User {
+	return &User{
+		Username: username,
+		Name:     name,
+		Surname:  surname,
+		Tel:      tel,
+		Status:   AvailableUserStatus, // Set the default status here
+		Role:     role,
+		Password: password,
+	}
+}
+
 // EncryptPassword encrypts the user's password using bcrypt
 func (u *User) EncryptPassword() error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
