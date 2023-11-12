@@ -111,10 +111,21 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Convert newUser to JSON format
+	responseJSON, err := json.Marshal(newUser)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error converting user to JSON")
+		return
+	}
+
 	// You can now access the user data from the request body
 	fmt.Printf("Received user data: %+v\n", newUser)
 	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(responseJSON)
 	fmt.Fprintf(w, "User registered successfully")
+
 	// sendTokenResponse(user, http.StatusOK, w)
 }
 
