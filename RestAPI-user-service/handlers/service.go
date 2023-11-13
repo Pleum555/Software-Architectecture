@@ -124,18 +124,19 @@ func MessageToPlaces(w http.ResponseWriter, r *http.Request) {
 	// Extract the username from the request or wherever you get it
 	userValue := context2.Get(r, "user")
 	user, _ := userValue.(*CustomClaims)
-	// fmt.Println("Username:", user.Username)
-	// fmt.Println("Password:", user.Password)
+	fmt.Println("Username:", user.Username)
+	fmt.Println("Password:", user.Password)
 	username := user.Username
 
-	var requestData models.Place
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&requestData); err != nil {
+	var requestData models.MessageBody
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	place := requestData.Place
+	place := requestData.Body.Place
+	requestData.Body.Reserver = username
 
 	// Create a connection to the RabbitMQ server
 	// var rabbitMQURL = "amqp://guest:guest@localhost:5672/"
@@ -167,7 +168,7 @@ func MessageToPlaces(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Define the message body (in this case, the username)
-	messageBody := []byte(username)
+	messageBody, _ := json.Marshal(requestData)
 
 	// Publish the message to the queue
 	err = ch.Publish(
@@ -176,7 +177,7 @@ func MessageToPlaces(w http.ResponseWriter, r *http.Request) {
 		false,     // mandatory
 		false,     // immediate
 		amqp.Publishing{
-			ContentType: "text/plain",
+			ContentType: "application/json",
 			Body:        messageBody,
 		})
 	if err != nil {
@@ -184,7 +185,8 @@ func MessageToPlaces(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Send a response to the client
-	fmt.Fprintf(w, "%s sent to RabbitMQ queue: %s", username, place)
+	// fmt.Fprintf(w, "%s sent to RabbitMQ queue: %s", username, place)
+	fmt.Fprintf(w, "%s", messageBody)
 	return
 }
 
