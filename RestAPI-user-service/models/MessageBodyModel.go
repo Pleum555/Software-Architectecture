@@ -3,6 +3,7 @@ package models
 // UserLocation represents the location information of a user
 type MessageBody struct {
 	Body struct {
+		Owner       string `json:"owner"`
 		Reserver    string `json:"reserver"`
 		Place       string `json:"place"`
 		Date        string `json:"date"`
