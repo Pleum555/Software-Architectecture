@@ -92,7 +92,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Use the NewUser function to create a new user with default values
-	newUser := models.NewUser(user.Username, user.Password, user.Name, user.Surname, user.Role, user.Tel, user.Status)
+	newUser := models.NewUser(user.Username, user.Password, user.Name, user.Surname, user.Tel, user.Role, user.Status)
 
 	// Generate a salted hash of the password
 	hashedPassword, err := HashPassword(newUser.Password)
@@ -112,20 +112,23 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Convert newUser to JSON format
-	responseJSON, err := json.Marshal(newUser)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Error converting user to JSON")
-		return
-	}
+	// responseJSON, err := json.Marshal(newUser)
+	// if err != nil {
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	fmt.Fprintf(w, "Error converting user to JSON")
+	// 	return
+	// }
 
 	// You can now access the user data from the request body
-	fmt.Printf("Received user data: %+v\n", newUser)
+	// fmt.Printf("Received user data: %+v\n", newUser)
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(responseJSON)
-	fmt.Fprintf(w, "User registered successfully")
-
+	// w.Write(responseJSON)
+	// fmt.Fprintf(w, "User registered successfully")
+	tokenString, _ := GenerateJWT(*newUser)
+	response := RegisterResponse{Success: true, Token: tokenString}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 	// sendTokenResponse(user, http.StatusOK, w)
 }
 
