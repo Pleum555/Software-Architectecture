@@ -34,7 +34,7 @@ func main() {
 	// Protect the /getcurrentlocation route with JWT authentication
 	r.Handle("/verifyuserdetail", handlers.AuthenticateJWT(http.HandlerFunc(handlers.VerifyUserDetail))).Methods("GET")
 	r.Handle("/getuserdetail", handlers.AuthenticateJWT(http.HandlerFunc(handlers.GetUserDetail))).Methods("GET")
-	r.Handle("/messagetoplaces", handlers.AuthenticateJWT(http.HandlerFunc(handlers.MessageToPlaces))).Methods("GET")
+	r.Handle("/messagetoplaces", handlers.AuthenticateJWT(http.HandlerFunc(handlers.MessageToPlaces))).Methods("POST")
 
 	// Add the new route and handler for updating user details
 	r.Handle("/updateuserdetail", handlers.AuthenticateJWT(http.HandlerFunc(handlers.UpdateUserDetail))).Methods("PUT")
