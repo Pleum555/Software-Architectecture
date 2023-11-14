@@ -28,11 +28,11 @@ type User struct {
 	Surname  string     `json:"surname"`
 	Tel      string     `json:"tel"`
 	Status   UserStatus `json:"status" default:"AVAILABLE"`
-	Role     string     `json:"role"`
+	Role     UserRole   `json:"role"`
 	Password string     `json:"password,omitempty"`
 }
 
-func NewUser(username, password, name, surname, role, tel string, status UserStatus) *User {
+func NewUser(username, password, name, surname, tel string, role UserRole, status UserStatus) *User {
 	if status == "" {
 		return &User{
 			Username: username,
